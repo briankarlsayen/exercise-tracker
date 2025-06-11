@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'corsheaders',
+    'djoser',
     'exercise',
 ]
 
@@ -137,4 +138,12 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.TokenAuthentication',
     ),
+}
+
+DJOSER = {
+    'SERIALIZERS': {
+        'user_create': 'user.serializers.CustomUserCreateSerializer',
+        'user': 'user.serializers.CustomUserCreateSerializer',
+         "current_user": "user.serializers.CustomUserCreateSerializer",
+    },
 }

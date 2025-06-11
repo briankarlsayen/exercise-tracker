@@ -11,6 +11,8 @@ class CategorySerializer(serializers.ModelSerializer):
         )
 
 class ExerciseSerializer(serializers.ModelSerializer):
+    updated_at = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S") 
+
     class Meta: 
         model = Exercise
         fields = (
@@ -23,4 +25,5 @@ class ExerciseSerializer(serializers.ModelSerializer):
             "created_at",
             "category",
             "user",
+            "updated_at",
         )

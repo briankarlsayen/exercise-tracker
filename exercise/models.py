@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from django.utils import timezone
 
 class Category(models.Model):
     name = models.CharField(max_length=255)
@@ -20,10 +21,11 @@ class Exercise(models.Model):
     intensity = models.IntegerField(null=True, blank=True)
     is_completed = models.BooleanField(default=True)
     is_active = models.BooleanField(default=True)
-    created_at = models.DateField(auto_now_add=True)
+    created_at = models.DateField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ('-created_at',)
+        ordering = ('-updated_at',)
     
     def __str__(self):
         return self.name
