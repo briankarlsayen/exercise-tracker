@@ -6,7 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
 
 from .models import Category, Exercise
-from .serializers import CategorySerializer, ExerciseSerializer
+from .serializers import CategorySerializer, ExerciseSerializer, CreateExerciseSerializer
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -44,7 +44,7 @@ def create_exercise(request):
     form_data = request.data
     form_data['user'] = request.user.id
 
-    serializer = ExerciseSerializer(data=form_data)
+    serializer = CreateExerciseSerializer(data=form_data)
     if serializer.is_valid():
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -54,7 +54,7 @@ def create_exercise(request):
 @permission_classes([IsAuthenticated])
 def get_exercises(request):
     date = request.GET.get('created_at')
-    exercises = Exercise.objects.filter(user=request.user.id)
+    exercises = Exercise.objects.filter(user=request.user.id).filter(is_active = True)
 
     if date is not None:
         exercises = exercises.filter(created_at = date)

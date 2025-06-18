@@ -140,6 +140,11 @@ REST_FRAMEWORK = {
     ),
 }
 
+AUTHENTICATION_BACKENDS = [
+    'exercise_tracker.backends.UsernameOrEmailBackend',  # Replace with actual app name
+    'django.contrib.auth.backends.ModelBackend',  # fallback
+]
+
 DJOSER = {
     'SERIALIZERS': {
         'user_create': 'user.serializers.CustomUserCreateSerializer',
