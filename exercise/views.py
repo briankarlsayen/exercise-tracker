@@ -3,6 +3,7 @@ from django.utils import timezone
 from django.db.models.functions import ExtractWeek, ExtractYear
 from django.db.models import Sum, Count
 from collections import defaultdict
+import calendar
 
 from rest_framework import status
 from rest_framework.response import Response
@@ -128,6 +129,65 @@ def get_stats(request):
     response = {
         "exercises_duration": exercises_duration,
         "exercise_days_done": f"{exercise_days_done}/{target_exercise_per_week}",
-        "streak": get_weekly_streak(4)
+        "streak": get_weekly_streak(target_exercise_per_week)
     }
+    return Response(response)
+
+
+# get all dates 
+# get distinct dates with exercises
+# format
+
+def get_date_range(start_date: str, end_date: str) -> list[str]:
+    start = datetime.strptime(start_date, '%Y-%m-%d').date()
+    end = datetime.strptime(end_date, '%Y-%m-%d').date()
+
+    date_list = []
+    current = start
+    while current <= end:
+        date_list.append(current.isoformat())
+        current += timedelta(days=1)
+
+    return date_list
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_calendar_exercises(request):
+    month = request.GET.get('month')
+    year = request.GET.get('year')
+
+    today = timezone.now()
+    current_year = today.year
+    current_month = today.month
+    current_day = today.day
+
+    if not month and not year:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+    try :
+        num_month = int(month)
+        num_year = int(year)
+    except:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+    
+    if current_year == num_year and current_month == num_month:
+        start_date = f"{current_year}-{current_month}-01"
+        end_date = f"{current_year}-{current_month}-{current_day}"
+        date_range = get_date_range(start_date=start_date, end_date=end_date)
+    else:
+        max_days = calendar.monthrange(num_year, num_month)[1]
+        start_date = f"{num_year}-{num_month}-01"
+        end_date = f"{num_year}-{num_month}-{max_days}"
+        date_range = get_date_range(start_date=start_date, end_date=end_date)
+        
+    prefix = f"{num_year}-{str(num_month).zfill(2)}" 
+    exercise_date_range = list(Exercise.objects.values_list('created_at', flat=True).filter(created_at__startswith=prefix).filter(is_active = True).distinct().order_by('created_at'))
+    exercise_date_range_str = [dt.isoformat() for dt in exercise_date_range]
+
+    calendar_dates = [{"date": d, "isDone": d in exercise_date_range_str} for d in date_range]
+
+    response = {
+        # 'exercise_date_range': exercise_date_range,
+        "calendar_dates": calendar_dates
+    }
+    
     return Response(response)
