@@ -23,4 +23,4 @@ env/
 .vscode/
 
 # Migrations
-**/migrations/
+**/migrations/__pycache__/
