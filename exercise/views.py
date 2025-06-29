@@ -1,7 +1,7 @@
 from datetime import timedelta, datetime
 from django.utils import timezone
 from django.db.models.functions import ExtractWeek, ExtractYear
-from django.db.models import Sum, Count
+from django.db.models import Sum
 from collections import defaultdict
 import calendar
 
@@ -75,7 +75,7 @@ def get_category_list(request):
     serializer = CategorySerializer(categories, many= True)
     return Response(serializer.data)
 
-def get_weekly_streak(min_unique_days=4):
+def get_weekly_streak(min_unique_days=4, request=''):
     # Step 1: Get all created_at dates with ISO year/week info
     exercises = (
         Exercise.objects
@@ -84,6 +84,7 @@ def get_weekly_streak(min_unique_days=4):
             year=ExtractYear('created_at'),
             date_only=ExtractWeek('created_at')  # to use distinct dates
         )
+        .filter(user=request.user.id)
         .filter(is_active = True)
         .values('year', 'week', 'created_at')
         .distinct()
@@ -121,22 +122,18 @@ def get_stats(request):
     target_exercise_per_week = 4
     now = timezone.now()
     iso_year, iso_week, _ = now.isocalendar()
-    weekly_exercise = Exercise.objects.annotate(week=ExtractWeek('created_at'), year=ExtractYear('created_at')).filter(week=iso_week, year=iso_year).filter(is_active = True)
+    weekly_exercise = Exercise.objects.annotate(week=ExtractWeek('created_at'), year=ExtractYear('created_at')).filter(week=iso_week, year=iso_year).filter(is_active = True).filter(user=request.user.id)
     
     exercises_duration = weekly_exercise.aggregate(total_duration=Sum('duration'))['total_duration']
 
     exercise_days_done = weekly_exercise.values_list('created_at', flat=True).distinct().count()
     response = {
-        "exercises_duration": exercises_duration,
+        "exercises_duration": exercises_duration if exercises_duration is not None else 0   ,
         "exercise_days_done": f"{exercise_days_done}/{target_exercise_per_week}",
-        "streak": get_weekly_streak(target_exercise_per_week)
+        "streak": get_weekly_streak(target_exercise_per_week, request)
     }
     return Response(response)
 
-
-# get all dates 
-# get distinct dates with exercises
-# format
 
 def get_date_range(start_date: str, end_date: str) -> list[str]:
     start = datetime.strptime(start_date, '%Y-%m-%d').date()
@@ -180,13 +177,12 @@ def get_calendar_exercises(request):
         date_range = get_date_range(start_date=start_date, end_date=end_date)
         
     prefix = f"{num_year}-{str(num_month).zfill(2)}" 
-    exercise_date_range = list(Exercise.objects.values_list('created_at', flat=True).filter(created_at__startswith=prefix).filter(is_active = True).distinct().order_by('created_at'))
+    exercise_date_range = list(Exercise.objects.values_list('created_at', flat=True).filter(created_at__startswith=prefix).filter(user=request.user.id).filter(is_active = True).distinct().order_by('created_at'))
     exercise_date_range_str = [dt.isoformat() for dt in exercise_date_range]
 
     calendar_dates = [{"date": d, "isDone": d in exercise_date_range_str} for d in date_range]
 
     response = {
-        # 'exercise_date_range': exercise_date_range,
         "calendar_dates": calendar_dates
     }
     
