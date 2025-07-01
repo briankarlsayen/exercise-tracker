@@ -45,7 +45,10 @@ INSTALLED_APPS = [
     'exercise',
 ]
 
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOWED_ORIGINS = [
+    "https://exercise-tracker-fe.vercel.app",
+    "http://localhost:5173/",
+]
 
 
 MIDDLEWARE = [
