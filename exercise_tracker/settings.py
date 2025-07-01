@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-^#d_-asahd3=eil*o0f3f$re35&=bo4_+r36que9yep8l&!avq
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['exercise-tracker-jmym.onrender.com']
 
 
 # Application definition
